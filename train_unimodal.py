@@ -213,7 +213,7 @@ def main():
         if args.use_pet:
             mri_path = '/root/autodl-tmp/pet_crop_pt'
         else:
-            mri_path = '/root/autodl-tmp/mri_crop_pt'
+            mri_path = '/root/autodl-tmp/mri_crop_pt' 
     else:
         raise ValueError("Unsupported operating system!")
 

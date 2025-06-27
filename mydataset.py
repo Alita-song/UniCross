@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import torch
 import nibabel as nib
-from monai.transforms import Compose, RandRotate, RandZoom, RandAffine, NormalizeIntensity, ToTensor
+from monai.transforms import Compose, RandRotate, RandZoom, RandAffine, NormalizeIntensity, ToTensor, Resize
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Dataset
 
@@ -12,6 +12,8 @@ from utils.utils import get_subjects_labels
 
 
 Transforms1 = Compose([
+    Resize(spatial_size=(128, 128, 128)),
+
     RandRotate(range_x=8.0, range_y=8.0, range_z=8.0),
     RandZoom(min_zoom=0.8, max_zoom=1.2),
     RandAffine(translate_range=(10, 10, 10), prob=1.0),
@@ -21,6 +23,7 @@ Transforms1 = Compose([
 ])
 
 Transforms2 = Compose([
+    Resize(spatial_size=(128, 128, 128)),
     NormalizeIntensity(nonzero=True),
     ToTensor()
 ])
@@ -47,7 +50,7 @@ def filter_images_by_subjects(img_name_list, subject_list):
     """
     filtered_list = []
     for file_name in img_name_list:
-        subject_name = '_'.join(file_name.split('_')[:3])  # file_name: 002_S_2043_uMCI.pt
+        subject_name = '_'.join(file_name.split('_')[:3])  # file_name: 002_S_2043_uMCI.nii.gz
         if subject_name in subject_list:
             filtered_list.append(file_name)
     return filtered_list
@@ -75,7 +78,7 @@ class MyDataSetMri(Dataset):
     def __init__(self, mri_dir_path, img_name_list, subject_list, transform=None, class_names=None):
         """
         Args:
-            mri_dir_path (string): MRI_data or PET_data: .pt
+            mri_dir_path (string): MRI_data or PET_data: .nii.gz
             img_name_list (list):  MRI PET clinical_data  are same
             subject_list: subject list
             transform: transform
@@ -97,7 +100,7 @@ class MyDataSetMri(Dataset):
         return len(self.img_name_list)
 
     def __getitem__(self, idx):
-        mri_img = torch.load(self.mri_paths[idx], weights_only=True)
+        mri_img = load_mri(self.mri_paths[idx])
 
         label = self.labels[idx]
 
@@ -112,8 +115,8 @@ class MyDataSetMriPet(Dataset):
                  class_names=None):
         """
         Args:
-            mri_dir_path (string): MRI_data: .pt
-            pet_dir_path (string): PET_data: .pt
+            mri_dir_path (string): MRI_data: .nii.gz
+            pet_dir_path (string): PET_data: .nii.gz
             img_name_list (list):  MRI PET clinical_data  are same
             subject_list: subject list
             transform: transform
@@ -137,8 +140,8 @@ class MyDataSetMriPet(Dataset):
         return len(self.img_name_list)
 
     def __getitem__(self, idx):
-        mri_img = torch.load(self.mri_paths[idx], weights_only=True)
-        pet_img = torch.load(self.pet_paths[idx], weights_only=True)
+        mri_img = load_mri(self.mri_paths[idx])
+        pet_img = load_mri(self.pet_paths[idx])
 
         label = self.labels[idx]
 
@@ -154,8 +157,8 @@ class MyDataSetMriPetClinical(Dataset):
                  class_names=None):
         """
         Args:
-            mri_dir_path (string): MRI_data: .pt
-            pet_dir_path (string): PET_data: .pt
+            mri_dir_path (string): MRI_data: .nii.gz
+            pet_dir_path (string): PET_data: .nii.gz
             clinical_dir_path (string): clinical_data: .pt
             img_name_list (list):  MRI PET clinical_data  are same
             subject_list: subject list
@@ -172,7 +175,10 @@ class MyDataSetMriPetClinical(Dataset):
 
         self.mri_paths = [os.path.join(mri_dir_path, name) for name in self.img_name_list]
         self.pet_paths = [os.path.join(pet_dir_path, name) for name in self.img_name_list]
-        self.clinical_paths = [os.path.join(clinical_dir_path, name) for name in self.img_name_list]
+        self.clinical_paths = [
+            os.path.join(clinical_dir_path, os.path.splitext(os.path.splitext(name)[0])[0] + '.pt')
+            for name in self.img_name_list
+        ]
 
         self.labels = []
         for img_name in self.img_name_list:
@@ -182,8 +188,8 @@ class MyDataSetMriPetClinical(Dataset):
         return len(self.img_name_list)
 
     def __getitem__(self, idx):
-        mri_img = torch.load(self.mri_paths[idx], weights_only=True)
-        pet_img = torch.load(self.pet_paths[idx], weights_only=True)
+        mri_img = load_mri(self.mri_paths[idx])
+        pet_img = load_mri(self.pet_paths[idx])
         clinical_features = torch.load(self.clinical_paths[idx], weights_only=True)
 
         label = self.labels[idx]
@@ -200,7 +206,7 @@ if __name__ == '__main__':
     class_name = ['CN','AD']
     mri_path = r"F:\ADNI_PROCESSED_version1\ADNI_MRI_T1_LINEAR"
     pet_path = r"F:\ADNI_PROCESSED_version1\ADNI_PET_T1_LINEAR_SMOOTH"
-    clinical_path = r"E:\中间处理过程\clinical_pt"
+    clinical_path = r"G:\中间处理过程\clinical_pt"
 
     mri_img_name_list = os.listdir(pet_path)
 
@@ -224,12 +230,12 @@ if __name__ == '__main__':
         )
         for i in range(669):
             mris, pets, clinicals, labels = dataset[i]
-            # print(f"\nSample {i + 1}:")
-            # print(f"Image name: {dataset.img_name_list[i]}")
-            # print(f"MRI shape: {mris.shape}")
-            # print(f"PET shape: {pets.shape}")
-            # print(f"Clinical features: {clinicals}")
-            # print(f"Label: {labels}")
-            # print("-" * 50)
+            print(f"\nSample {i + 1}:")
+            print(f"Image name: {dataset.img_name_list[i]}")
+            print(f"MRI shape: {mris.shape}")
+            print(f"PET shape: {pets.shape}")
+            print(f"Clinical features: {clinicals}")
+            print(f"Label: {labels}")
+            print("-" * 50)
         print(dataset.__len__())
         break

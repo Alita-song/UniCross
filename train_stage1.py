@@ -28,7 +28,7 @@ from loss.loss import calculate_my_loss
 def get_arguments():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--experiment_name', type=str, default='KJKJK')
+    parser.add_argument('--experiment_name', type=str, default='NO_shared')
     parser.add_argument('--class_names', type=str, default='CN,AD',
                         choices=['CN,AD', 'sMCI,pMCI'], help='names of the classes.')
 
@@ -119,7 +119,7 @@ def save_models(fold, class_names, experiment_name, model_mri, model_pet, classi
     return current_acc, new_filepaths, {'mri': acc_mri, 'pet': acc_pet}
 
 
-def forward(criterion, weight_supcon_criterion, train_data, model_mri, model_pet, classifier,
+def forward(args, criterion, weight_supcon_criterion, train_data, model_mri, model_pet, classifier,
             clinical_encoder, device):
     # get data
     train_data: tuple[Any, Any, Any, Any]
@@ -181,7 +181,7 @@ def train_and_test(args, train_dataloader, test_dataloader, model_mri, model_pet
         train_bar = tqdm(train_dataloader, file=sys.stdout)
         for step, train_data in enumerate(train_bar):
             optimizer.zero_grad()
-            loss_mri, loss_pet, loss_align_mri, loss_align_pet, loss_contrastive = forward(criterion,
+            loss_mri, loss_pet, loss_align_mri, loss_align_pet, loss_contrastive = forward(args, criterion,
                                                                                            weight_supcon_criterion,
                                                                                            train_data, model_mri,
                                                                                            model_pet, classifier,

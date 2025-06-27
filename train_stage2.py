@@ -29,18 +29,18 @@ global model_filepath
 def get_arguments():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--experiment_name', type=str, default='UniCross')
+    parser.add_argument('--experiment_name', type=str, default='NO_Shared')
     parser.add_argument('--encoder_checkpoints_save_root', type=str,
-                        default=r"E:\PythonProjects\UniCross\checkpoints\sMCI_pMCI\UniCross",
+                        default=r"E:\PythonProjects\UniCross\checkpoints\CN_AD\NO_shared",
                         help='Root directory for encoder_checkpoints_save from train_stage1')
-    parser.add_argument('--class_names', type=str, default='sMCI,pMCI',
+    parser.add_argument('--class_names', type=str, default='CN,AD',
                         choices=['CN,AD', 'sMCI,pMCI'], help='names of the two classes.')
 
     parser.add_argument('--use_wandb', type=bool, default=False,
                         help='if use wandb to log')
     parser.add_argument('--backbone', type=str, default='vit',
                         choices=['vit'], help='names of the backbone.')
-    parser.add_argument('--only_test', type=bool, default=True,
+    parser.add_argument('--only_test', type=bool, default=False,
                         help='if only_test to get metrics')
 
     parser.add_argument('--seed', type=int, default=42)
@@ -253,7 +253,8 @@ def train_and_test(args, train_dataloader, test_dataloader, mri_encoder, pet_enc
         # save best model
         if acc_is_best or auc_is_best:
             best_acc = metrics['acc']
-            best_metrics_fold = metrics.copy()
+            best_
+            metrics_fold = metrics.copy()
 
             save_dir = os.path.join('checkpoints', f'{class_names[0]}_{class_names[1]}', f'{args.experiment_name}')
             if not os.path.exists(save_dir):

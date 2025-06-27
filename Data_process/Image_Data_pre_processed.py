@@ -11,7 +11,9 @@ from monai.transforms import (
     SpatialPad,
 )
 from tqdm import tqdm
-
+"""
+    This script is deprecated. It was used to resize brain NIfTI files to (128, 128, 128) and convert them to .pt files.
+"""
 
 def get_transforms(img):
     cropper = CropForeground(source_key=None)
