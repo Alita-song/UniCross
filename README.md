@@ -8,8 +8,8 @@ UniCross: Balanced Multimodal Learning for Alzheimer’s Disease Diagnosis by Un
 ## Content 
 
 - [Introduction](#Introduction)
-- [File Tree](#File Tree)
-- [Train steps](#Train steps)
+- [File Tree](#File-Tree)
+- [Train steps](#Train-steps)
 - [License](#License)
 - [Thanks](#Thanks)
 
