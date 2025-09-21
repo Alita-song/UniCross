@@ -63,6 +63,12 @@ Distributed under the MIT License. See [`LICENSE`](https://github.com/shaojintia
 - [DI-MML](https://github.com/fanyunfeng-bit/DI-MML)
 - [SupConLoss](https://github.com/XG293/SupConLoss)
 
+### WeChat
+- YinSong-zzz
+- 欢迎交流
+
+<img src="Image/nailoong.png" alt="Screenshot" width="15%">
+
 
 
 
