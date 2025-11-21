@@ -371,7 +371,7 @@ def main():
             pet_dir_path=pet_path,
             clinical_dir_path=clinical_path,
             img_name_list=mri_img_name_list,
-            subject_list=train_subjects,
+            subject_list=test_subjects,
             transform=Transforms2,
             class_names=class_names
         )
