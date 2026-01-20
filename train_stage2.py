@@ -253,8 +253,8 @@ def train_and_test(args, train_dataloader, test_dataloader, mri_encoder, pet_enc
         # save best model
         if acc_is_best or auc_is_best:
             best_acc = metrics['acc']
-            best_
-            metrics_fold = metrics.copy()
+            best_auc = metrics["auc"]
+            best_metrics_fold = metrics.copy()
 
             save_dir = os.path.join('checkpoints', f'{class_names[0]}_{class_names[1]}', f'{args.experiment_name}')
             if not os.path.exists(save_dir):
