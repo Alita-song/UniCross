@@ -52,6 +52,14 @@ UniCross
 2. Data Pre-Processing
 3. Train Stage1 and Train Stage2
 
+# Note (2026.1.21):
+Group_Subject_id.csv is located in the Data/ folder. Only Subjects' baseline (bl) image are included. I will add image_id file later, which will allow direct downloading from ADNI.
+For data preprocessing, you can refer to this [Blog](https://sidiexplore.xyz/2023/03/18/SynthStrip/) to minimize preprocessing time.
+
+说明 (2026.1.21):
+Group_Subject_id.csv 在  Data/ 文件夹下。所有的 subject 的 image 只取 bl. 后续等我把 image_id 放进来, 这样就可以直接在 ADNI 下载了。
+关于数据预处理, 可以参考这一篇 [Blog](https://sidiexplore.xyz/2023/03/18/SynthStrip/), 尽量减少预处理数据的时间。
+
 
 ### License
 

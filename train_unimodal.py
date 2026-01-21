@@ -5,7 +5,6 @@ from typing import Any
 
 import wandb
 import pandas as pd
-from sympy import false
 from tqdm import tqdm
 from sklearn.model_selection import StratifiedKFold
 
@@ -17,51 +16,72 @@ import torch.optim as optim
 from model.mynet import create_vit_backbone, MriClassifier, PetClassifier
 from mydataset import Transforms1, Transforms2
 from mydataset import MyDataSetMri
-from utils.utils import calculate_metrics, get_subjects_labels, calculate_all_folds_avg_metrics, set_seed
+from utils.utils import (
+    calculate_metrics,
+    get_subjects_labels,
+    calculate_all_folds_avg_metrics,
+    set_seed,
+)
 
 
 def get_arguments():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--experiment_name', type=str, default='Vit_PET_crop')
-    parser.add_argument('--class_names', type=str, default='CN,AD',
-                        choices=['CN,AD', 'sMCI,pMCI'], help='names of the two classes.')
+    parser.add_argument("--experiment_name", type=str, default="Vit_PET_crop")
+    parser.add_argument(
+        "--class_names",
+        type=str,
+        default="CN,AD",
+        choices=["CN,AD", "sMCI,pMCI"],
+        help="names of the two classes.",
+    )
 
-    parser.add_argument('--use_wandb', type=bool, default=false,
-                        help='use wandb to log')
-    parser.add_argument('--backbone', type=str, default='vit',
-                        choices=['vit'], help='names of the backbone.')
-    parser.add_argument('--use_pet', type=bool, default=True,
-                        help='if use pet')
+    parser.add_argument(
+        "--use_wandb", type=bool, default=False, help="use wandb to log"
+    )
+    parser.add_argument(
+        "--backbone",
+        type=str,
+        default="vit",
+        choices=["vit"],
+        help="names of the backbone.",
+    )
+    parser.add_argument("--use_pet", type=bool, default=True, help="if use pet")
 
-    parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--n_splits', type=int, default=5)
-    parser.add_argument('--batch_size', type=int, default=4)
-    parser.add_argument('--num_workers', type=int, default=8)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--n_splits", type=int, default=5)
+    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--num_workers", type=int, default=8)
 
-    parser.add_argument('--optim_type', type=str, default='SGD', choices=['SGD'])
-    parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--weight_decay', type=float, default=0.001)
-    parser.add_argument('--momentum', type=float, default=0.9)
-    parser.add_argument('--epochs', type=int, default=40)
+    parser.add_argument("--optim_type", type=str, default="SGD", choices=["SGD"])
+    parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--weight_decay", type=float, default=0.001)
+    parser.add_argument("--momentum", type=float, default=0.9)
+    parser.add_argument("--epochs", type=int, default=40)
 
-    parser.add_argument('--device', type=str, default='cuda:0',
-                        help='Device to use for computation, e.g., "cpu", "cuda:0"')
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda:0",
+        help='Device to use for computation, e.g., "cpu", "cuda:0"',
+    )
 
     return parser.parse_args()
 
 
 def save_model(args, model, previous_model_filepath, fold, class_names):
     # create save dir
-    save_dir = os.path.join('checkpoints', f'{class_names[0]}_{class_names[1]}', f'{args.experiment_name}')
+    save_dir = os.path.join(
+        "checkpoints", f"{class_names[0]}_{class_names[1]}", f"{args.experiment_name}"
+    )
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
     # create save model file path
     if args.use_pet:
-        model_filename = f'fold-{fold}_model_pet.pth'
+        model_filename = f"fold-{fold}_model_pet.pth"
     else:
-        model_filename = f'fold-{fold}_model_mri.pth'
+        model_filename = f"fold-{fold}_model_mri.pth"
     model_filepath = os.path.join(save_dir, model_filename)
 
     if previous_model_filepath is not None and os.path.exists(previous_model_filepath):
@@ -75,18 +95,22 @@ def save_model(args, model, previous_model_filepath, fold, class_names):
     return model_filepath
 
 
-def train_and_test(args, train_dataloader, test_dataloader, model, device, optimizer, lr_scheduler, fold, metrics_dict):
-    class_names = args.class_names.split(',')
+def train_and_test(
+    args,
+    train_dataloader,
+    test_dataloader,
+    model,
+    device,
+    optimizer,
+    lr_scheduler,
+    fold,
+    metrics_dict,
+):
+    class_names = args.class_names.split(",")
 
     criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
 
-    best_metrics_fold = {
-        'acc': 0.0,
-        'spec': 0.0,
-        'recall': 0.0,
-        'f1': 0.0,
-        'auc': 0.0
-    }
+    best_metrics_fold = {"acc": 0.0, "spec": 0.0, "recall": 0.0, "f1": 0.0, "auc": 0.0}
 
     best_acc = 0.0
     best_auc = 0.0
@@ -111,10 +135,16 @@ def train_and_test(args, train_dataloader, test_dataloader, model, device, optim
             optimizer.step()
 
             train_loss += loss.item()
-            train_bar.desc = "fold {}: train epoch[{}/{}] loss:{:.3f}".format(fold, epoch + 1, args.epochs, loss)
+            train_bar.desc = "fold {}: train epoch[{}/{}] loss:{:.3f}".format(
+                fold, epoch + 1, args.epochs, loss
+            )
 
         lr_scheduler.step()
-        print('fold {}: Current Learning Rate: {}'.format(fold, lr_scheduler.get_last_lr()))
+        print(
+            "fold {}: Current Learning Rate: {}".format(
+                fold, lr_scheduler.get_last_lr()
+            )
+        )
         ################################################################################################################
         # test
         model.eval()
@@ -151,28 +181,34 @@ def train_and_test(args, train_dataloader, test_dataloader, model, device, optim
             f"SPEC: {metrics['spec']:.4f}, "
             f"Recall: {metrics['recall']:.4f}, "
             f"F1 Score: {metrics['f1']:.4f}, "
-            f"AUC: {metrics['auc']:.4f}")
+            f"AUC: {metrics['auc']:.4f}"
+        )
 
-        acc_is_best = metrics['acc'] > best_acc
-        auc_is_best = (metrics['acc'] == best_acc and metrics['auc'] > best_auc)
+        acc_is_best = metrics["acc"] > best_acc
+        auc_is_best = metrics["acc"] == best_acc and metrics["auc"] > best_auc
         # save best model
         if acc_is_best or auc_is_best:
-            best_acc = metrics['acc']
-            best_auc = metrics['auc']
+            best_acc = metrics["acc"]
+            best_auc = metrics["auc"]
             best_metrics_fold = metrics.copy()
-            previous_model_filepath = save_model(args, model, previous_model_filepath, fold, class_names)
+            previous_model_filepath = save_model(
+                args, model, previous_model_filepath, fold, class_names
+            )
 
         print(
-            '--------------------------------------------------------------------------------------------------------')
+            "--------------------------------------------------------------------------------------------------------"
+        )
 
-    print('Finished Training and validating')
+    print("Finished Training and validating")
 
     if args.use_wandb:
-        wandb.log({
-            'fold': fold,
-            'best_acc': best_acc,
-            'best_auc': best_auc,
-        })
+        wandb.log(
+            {
+                "fold": fold,
+                "best_acc": best_acc,
+                "best_auc": best_auc,
+            }
+        )
 
     metrics_dict[fold] = best_metrics_fold
     return metrics_dict
@@ -181,15 +217,15 @@ def train_and_test(args, train_dataloader, test_dataloader, model, device, optim
 def main():
     args = get_arguments()
     set_seed(args.seed)
-    class_names = args.class_names.split(',')
+    class_names = args.class_names.split(",")
     class_num = len(class_names)
 
     nw = args.num_workers  # number of workers
-    print('Using {} dataloader workers every process'.format(nw))
+    print("Using {} dataloader workers every process".format(nw))
 
-    if 'cuda' in args.device and not torch.cuda.is_available():
+    if "cuda" in args.device and not torch.cuda.is_available():
         print("CUDA is not available on this machine. Switching to CPU.")
-        device = torch.device('cpu')
+        device = torch.device("cpu")
     else:
         device = torch.device(args.device)
     print(f"Using device: {device}")
@@ -199,26 +235,32 @@ def main():
     if args.use_wandb:
         os.environ["WANDB_API_KEY"] = "yor_key"
         config_dict = vars(args)
-        name = f'{args.experiment_name}_{class_names[0]}-{class_names[1]}'
-        wandb.init(project='UniCross', config=config_dict, mode="online", save_code=True, name=name)
+        name = f"{args.experiment_name}_{class_names[0]}-{class_names[1]}"
+        wandb.init(
+            project="UniCross",
+            config=config_dict,
+            mode="online",
+            save_code=True,
+            name=name,
+        )
 
     # Folder path
 
-    if os.name == 'nt':  # Windows
+    if os.name == "nt":  # Windows
         if args.use_pet:
             mri_path = r"E:\中间处理过程\transform_final\pet_crop_pt"
         else:
             mri_path = r"E:\中间处理过程\transform_final\mri_crop_pt"
-    elif os.name == 'posix':  # Linux
+    elif os.name == "posix":  # Linux
         if args.use_pet:
-            mri_path = '/root/autodl-tmp/pet_crop_pt'
+            mri_path = "/root/autodl-tmp/pet_crop_pt"
         else:
-            mri_path = '/root/autodl-tmp/mri_crop_pt' 
+            mri_path = "/root/autodl-tmp/mri_crop_pt"
     else:
         raise ValueError("Unsupported operating system!")
 
     mri_img_name_list = os.listdir(mri_path)
-    subject_list_file = 'Data/Group_Subject_MRI_PET.csv'
+    subject_list_file = "Data/Group_Subject_MRI_PET.csv"
     df = pd.read_csv(subject_list_file)
 
     ####################################################################################################################
@@ -230,26 +272,35 @@ def main():
 
     skf = StratifiedKFold(n_splits=args.n_splits, shuffle=True, random_state=args.seed)
     for fold, (train_index, test_index) in enumerate(skf.split(subjects, labels)):
-
         ################################################################################################################
         # model
-        if args.backbone == 'vit':
+        if args.backbone == "vit":
             if args.use_pet:
                 pet_backbone = create_vit_backbone(pretrained=True)
-                model = PetClassifier(pet_backbone, out_feature_dim=768, class_num=class_num).to(device)
+                model = PetClassifier(
+                    pet_backbone, out_feature_dim=768, class_num=class_num
+                ).to(device)
             else:
                 mri_backbone = create_vit_backbone(pretrained=True)
-                model = MriClassifier(mri_backbone, out_feature_dim=768, class_num=class_num).to(device)
+                model = MriClassifier(
+                    mri_backbone, out_feature_dim=768, class_num=class_num
+                ).to(device)
         else:
             raise ValueError("Unsupported backbone!")
 
         # optimizer
-        if args.optim_type == 'SGD':
-            optimizer = optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
-                                  momentum=args.momentum)
+        if args.optim_type == "SGD":
+            optimizer = optim.SGD(
+                model.parameters(),
+                lr=args.lr,
+                weight_decay=args.weight_decay,
+                momentum=args.momentum,
+            )
         else:
             raise ValueError("Unsupported optimizer!")
-        lr_scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=3, eta_min=0.00001)
+        lr_scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            optimizer, T_0=10, T_mult=3, eta_min=0.00001
+        )
 
         ################################################################################################################
         train_subjects = subjects[train_index]
@@ -269,15 +320,36 @@ def main():
             transform=Transforms2,
             class_names=class_names,
         )
-        train_dataloader = DataLoader(dataset=train_dataset, batch_size=args.batch_size,
-                                      shuffle=True, num_workers=nw, drop_last=False)
-        test_dataloader = DataLoader(dataset=test_dataset, batch_size=args.batch_size,
-                                     shuffle=False, num_workers=nw)
-        print("fold {}: {} subjects for training, {} subjects for test.".format(fold, len(train_subjects),
-                                                                                len(test_subjects)))
+        train_dataloader = DataLoader(
+            dataset=train_dataset,
+            batch_size=args.batch_size,
+            shuffle=True,
+            num_workers=nw,
+            drop_last=False,
+        )
+        test_dataloader = DataLoader(
+            dataset=test_dataset,
+            batch_size=args.batch_size,
+            shuffle=False,
+            num_workers=nw,
+        )
+        print(
+            "fold {}: {} subjects for training, {} subjects for test.".format(
+                fold, len(train_subjects), len(test_subjects)
+            )
+        )
         # train and test
-        all_folds_metrics = train_and_test(args, train_dataloader, test_dataloader, model, device, optimizer,
-                                           lr_scheduler, fold, all_folds_metrics)
+        all_folds_metrics = train_and_test(
+            args,
+            train_dataloader,
+            test_dataloader,
+            model,
+            device,
+            optimizer,
+            lr_scheduler,
+            fold,
+            all_folds_metrics,
+        )
 
     # calculate all folds avg metrics
     calculate_all_folds_avg_metrics(args, all_folds_metrics)
@@ -286,5 +358,5 @@ def main():
         wandb.finish()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
