@@ -8,7 +8,6 @@ UniCross: Balanced Multimodal Learning for Alzheimer’s Disease Diagnosis by Un
 ## Content 
 
 - [Introduction](#Introduction)
-- [File Tree](#File-Tree)
 - [Train steps](#Train-steps)
 - [License](#License)
 - [Thanks](#Thanks)
@@ -17,48 +16,26 @@ UniCross: Balanced Multimodal Learning for Alzheimer’s Disease Diagnosis by Un
 
 This repo is for the MICCAI 2025 accepted paper UniCross: [link](https://papers.miccai.org/miccai-2025/0972-Paper2409.html)
 
-### File Tree 
-
-```
-UniCross
-├── Data_process
-│   ├── Clinical_Data_pre_processed.py
-│   └── Image_Data_pre_processed.py
-├── LICENSE
-├── README.md
-├── linear_prob.py
-├── loss
-│   ├── MetaWeightContrastiveLoss.py
-│   └── loss.py
-├── model
-│   ├── certainty_aware_fusion_module.py
-│   ├── fusion_modules.py
-│   ├── mynet.py
-│   ├── uncertainty_fusion_module.py
-│   └── vit3d.py
-├── mydataset.py
-├── train_joint.py
-├── train_stage1.py 
-├── train_stage2.py
-├── train_unimodal.py
-└── utils
-    ├── __init__.py
-    └── utils.py
-
-```
 
 ### Train steps
 1. Download Dataset (FDG-PET and sMRI and ADNIMERGE table) from [ADNI](https://adni.loni.usc.edu/)
 2. Data Pre-Processing
 3. Train Stage1 and Train Stage2
 
-# Note (2026.1.21):
-Group_Subject_id.csv is located in the Data/ folder. Only Subjects' baseline (bl) image are included. I will add image_id file later, which will allow direct downloading from ADNI.
-For data preprocessing, you can refer to this [Blog](https://sidiexplore.xyz/2023/03/18/SynthStrip/) to minimize preprocessing time.
 
-说明 (2026.1.21):
-Group_Subject_id.csv 在  Data/ 文件夹下。所有的 subject 的 image 只取 bl. 后续等我把 image_id 放进来, 这样就可以直接在 ADNI 下载了。
-关于数据预处理, 可以参考这一篇 [Blog](https://sidiexplore.xyz/2023/03/18/SynthStrip/), 尽量减少预处理数据的时间。
+# 说明 (2026.2.1):
+- `Data/` 文件夹包含 `Group_Subject_id.csv` 以及 MRI 与 PET 的 `image id` 列表；其中 `image id` 可用于在 ADNI 上直接下载对应影像。
+- 在 ADNI 数据库中批量检索 `image id` 时，可能出现部分结果缺失；需要先找出未返回的 `image id`，再逐个单独查找。
+- 论文中 sMCI 的样本数应为 191（而非 192），因此总 subject 数为 1043。
+- `Data/clinical_data.zip` 为临床数据，已经处理好并转换为 `pt` 格式。
+- 数据预处理可参考这篇 [Blog](https://sidiexplore.xyz/2023/03/18/SynthStrip/)，以尽量减少预处理耗时。
+
+# Note (2026.2.1):
+- The `Data/` folder contains `Group_Subject_id.csv` and the MRI/PET `image id` lists; these `image id`s can be used to directly download the corresponding images from ADNI.
+- When querying multiple `image id`s in bulk on ADNI, some results may be missing; you may need to identify the `image id`s that were not returned and query them one by one.
+- The number of sMCI subjects reported in the paper should be 191 (not 192); therefore, the total number of subjects is 1043.
+- `Data/clinical_data.zip` has been processed and converted to `pt` format.
+- For data preprocessing, you may refer to this [blog post](https://sidiexplore.xyz/2023/03/18/SynthStrip/) to minimize preprocessing time.
 
 
 ### License
