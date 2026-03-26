@@ -35,7 +35,7 @@ This repo is for the MICCAI 2025 accepted paper UniCross: [link](https://papers.
 - When querying multiple `image id`s in bulk on ADNI, some results may be missing; you may need to identify the `image id`s that were not returned and query them one by one.
 - The number of sMCI subjects reported in the paper should be 191 (not 192); therefore, the total number of subjects is 1043.
 - `Data/clinical_data.zip` has been processed and converted to `pt` format.
-- For data preprocessing, you may refer to this [blog post](https://sidiexplore.xyz/2023/03/18/SynthStrip/) to minimize preprocessing time.
+- For data preprocessing, you may refer to this [blog post](https://sidi.fun/2023/03/18/SynthStrip/) to minimize preprocessing time.
 
 
 ### License
